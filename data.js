@@ -1,13 +1,13 @@
 /**
- * MCBE — carregador de addons
+ * MCBE — carregador automático de addons
  *
- * Estrutura nova:
+ * Estrutura:
+ *   js/data.js
  *   js/addons/<slug>.js
  *   addons/<slug>.html
  *
- * Cada arquivo JS registra um único addon em window.MCBE_ADDONS.
- * No catálogo, o loader descobre todos os JS da pasta pelo GitHub API.
- * Nas páginas individuais, carrega somente o JS cujo nome é igual ao HTML.
+ * NÃO edite este arquivo para cadastrar addons.
+ * Basta colocar o JS em js/addons/.
  */
 
 const MCBE_CATEGORIES = [
@@ -21,82 +21,181 @@ const MCBE_CATEGORIES = [
 ];
 
 const MCBE_VERSIONS = ["1.21", "1.20", "1.19", "1.18"];
-const MCBE_ADDONS_PATH = "js/addons/";
-const MCBE_GITHUB_BRANCH = "main";
-
-// Descobre automaticamente o repositório onde o GitHub Pages está hospedado.
-// Ex.: https://usuario.github.io/mcbe/ -> usuario/mcbe
-const MCBE_HOST_OWNER = location.hostname.endsWith(".github.io")
-  ? location.hostname.replace(/\.github\.io$/i, "")
-  : "yuricruzcorreia2024-netizen";
-const MCBE_PATH_PARTS = location.pathname.split("/").filter(Boolean);
-const MCBE_GITHUB_REPO = MCBE_HOST_OWNER + "/" + (MCBE_PATH_PARTS[0] || "mcbe");
-const MCBE_SITE_ROOT = MCBE_PATH_PARTS.length ? `/${MCBE_PATH_PARTS[0]}/` : "/";
-const MCBE_ADDONS_API = `https://api.github.com/repos/${MCBE_GITHUB_REPO}/contents/${MCBE_ADDONS_PATH}?ref=${MCBE_GITHUB_BRANCH}`;
-const MCBE_SITE_BASE = `${location.origin}${MCBE_SITE_ROOT}`;
 
 window.MCBE_ADDONS = window.MCBE_ADDONS || [];
 
-function mcbeAddonsBySlug() {
-  const map = new Map();
-  for (const addon of window.MCBE_ADDONS) {
-    if (addon && addon.slug) map.set(addon.slug, addon);
-  }
-  return [...map.values()];
+/* ---------- Descoberta do repositório ---------- */
+
+const MCBE_PATH_PARTS = location.pathname.split("/").filter(Boolean);
+const MCBE_SITE_ROOT =
+  location.hostname.endsWith(".github.io") && MCBE_PATH_PARTS.length
+    ? `/${MCBE_PATH_PARTS[0]}/`
+    : "/";
+
+const MCBE_OWNER = location.hostname.endsWith(".github.io")
+  ? location.hostname.replace(/\.github\.io$/i, "")
+  : "";
+
+const MCBE_REPO_NAME =
+  location.hostname.endsWith(".github.io") && MCBE_PATH_PARTS.length
+    ? MCBE_PATH_PARTS[0]
+    : "";
+
+const MCBE_REPOSITORY =
+  MCBE_OWNER && MCBE_REPO_NAME
+    ? `${MCBE_OWNER}/${MCBE_REPO_NAME}`
+    : "";
+
+const MCBE_SITE_BASE = `${location.origin}${MCBE_SITE_ROOT}`;
+const MCBE_ADDONS_PATH = "js/addons/";
+const MCBE_GITHUB_API = MCBE_REPOSITORY
+  ? `https://api.github.com/repos/${MCBE_REPOSITORY}`
+  : "";
+
+window.MCBE_LOAD_ERROR = null;
+window.MCBE_LOAD_STATUS = "loading";
+
+function mcbeLog(...args) {
+  console.log("[MCBE]", ...args);
+}
+
+function mcbeScriptUrl(filename) {
+  return `${MCBE_SITE_BASE}${MCBE_ADDONS_PATH}${encodeURIComponent(filename)}?v=${Date.now()}`;
 }
 
 function mcbeLoadScript(src) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = src;
-    script.async = true;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error(`Não foi possível carregar ${src}`));
+    script.async = false;
+    script.onload = () => resolve();
+    script.onerror = () =>
+      reject(new Error(`Não foi possível carregar: ${src}`));
     document.head.appendChild(script);
   });
 }
 
-async function mcbeLoadSingleAddon(slug) {
-  const safeSlug = String(slug || "").toLowerCase().trim();
-  if (!safeSlug) return;
-  await mcbeLoadScript(`${MCBE_SITE_BASE}${MCBE_ADDONS_PATH}${encodeURIComponent(safeSlug)}.js`);
+function mcbeAddonsBySlug() {
+  const map = new Map();
+
+  for (const addon of window.MCBE_ADDONS) {
+    if (addon && addon.slug) {
+      map.set(String(addon.slug), addon);
+    }
+  }
+
+  return [...map.values()];
 }
 
-async function mcbeLoadAllAddons() {
-  const response = await fetch(MCBE_ADDONS_API, {
-    headers: { Accept: "application/vnd.github+json" },
+/* ---------- GitHub ---------- */
+
+async function mcbeGithubJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/vnd.github+json",
+    },
     cache: "no-store",
   });
 
   if (!response.ok) {
-    throw new Error(`GitHub API respondeu ${response.status}.`);
+    let detail = "";
+    try {
+      const body = await response.json();
+      detail = body.message ? ` — ${body.message}` : "";
+    } catch (_) {}
+
+    throw new Error(`GitHub API ${response.status}${detail}`);
   }
 
-  const files = await response.json();
-  if (!Array.isArray(files)) {
-    throw new Error("A resposta do GitHub não contém uma lista de arquivos.");
-  }
-
-  const addonFiles = files
-    .filter((item) => item.type === "file")
-    .map((item) => item.name)
-    .filter((name) => /^[^/]+\.js$/i.test(name));
-
-  await Promise.all(
-    addonFiles.map((name) =>
-      mcbeLoadScript(`${MCBE_SITE_BASE}${MCBE_ADDONS_PATH}${encodeURIComponent(name)}`)
-    )
-  );
+  return response.json();
 }
 
-const MCBE_URL_PARAMS = new URLSearchParams(window.location.search);
-const MCBE_PATH_SLUG_MATCH = window.location.pathname.match(/\/addons\/([^/]+)\.html$/i);
+async function mcbeGetDefaultBranch() {
+  if (!MCBE_GITHUB_API) {
+    throw new Error("Não consegui identificar o repositório GitHub.");
+  }
+
+  const repo = await mcbeGithubJson(MCBE_GITHUB_API);
+  return repo.default_branch || "main";
+}
+
+async function mcbeGetAddonFiles() {
+  const branch = await mcbeGetDefaultBranch();
+
+  const treeUrl =
+    `${MCBE_GITHUB_API}/git/trees/` +
+    `${encodeURIComponent(branch)}?recursive=1`;
+
+  const tree = await mcbeGithubJson(treeUrl);
+
+  if (!Array.isArray(tree.tree)) {
+    throw new Error("A árvore do GitHub não retornou arquivos.");
+  }
+
+  const prefix = "js/addons/";
+
+  return tree.tree
+    .filter((item) => item.type === "blob")
+    .map((item) => item.path)
+    .filter(
+      (path) =>
+        path.startsWith(prefix) &&
+        path.toLowerCase().endsWith(".js") &&
+        !path.slice(prefix.length).includes("/")
+    )
+    .map((path) => path.slice(prefix.length));
+}
+
+/* ---------- Carregamento ---------- */
+
+async function mcbeLoadAllAddons() {
+  const files = await mcbeGetAddonFiles();
+
+  mcbeLog("Arquivos encontrados:", files);
+
+  if (!files.length) {
+    throw new Error(
+      "A pasta js/addons existe, mas nenhum arquivo .js foi encontrado."
+    );
+  }
+
+  // Sequencial para evitar corrida entre scripts.
+  for (const filename of files) {
+    await mcbeLoadScript(mcbeScriptUrl(filename));
+  }
+
+  return files;
+}
+
+async function mcbeLoadSingleAddon(slug) {
+  const safeSlug = String(slug || "").trim();
+
+  if (!safeSlug) {
+    throw new Error("Slug do addon não informado.");
+  }
+
+  const filename = `${safeSlug}.js`;
+  await mcbeLoadScript(mcbeScriptUrl(filename));
+
+  return filename;
+}
+
+/* ---------- Identificação da página ---------- */
+
+const MCBE_URL_PARAMS = new URLSearchParams(location.search);
+
+const MCBE_ADDON_SLUG_FROM_PATH = location.pathname.match(
+  /\/addons\/([^/]+)\.html$/i
+);
+
 const MCBE_ADDON_SLUG_VALUE =
-  typeof MCBE_ADDON_SLUG !== "undefined"
+  typeof MCBE_ADDON_SLUG !== "undefined" && MCBE_ADDON_SLUG
     ? MCBE_ADDON_SLUG
-    : MCBE_PATH_SLUG_MATCH
-      ? decodeURIComponent(MCBE_PATH_SLUG_MATCH[1])
+    : MCBE_ADDON_SLUG_FROM_PATH
+      ? decodeURIComponent(MCBE_ADDON_SLUG_FROM_PATH[1])
       : MCBE_URL_PARAMS.get("slug");
+
+/* ---------- API usada pelo site ---------- */
 
 const MCBE_REPO = {
   ready: (async () => {
@@ -106,14 +205,40 @@ const MCBE_REPO = {
       } else {
         await mcbeLoadAllAddons();
       }
+
+      window.MCBE_LOAD_STATUS = "ready";
+      mcbeLog(
+        `${window.MCBE_ADDONS.length} addon(s) carregado(s) com sucesso.`
+      );
     } catch (error) {
-      console.error("MCBE: erro carregando addons", error);
+      window.MCBE_LOAD_STATUS = "error";
+      window.MCBE_LOAD_ERROR = error;
+
+      console.error("MCBE: falha ao carregar addons.", error);
+
+      // Não transforma erro de carregamento em "0 conteúdos" silenciosamente.
+      const message =
+        error && error.message
+          ? error.message
+          : "Erro desconhecido ao carregar os addons.";
+
+      console.error(
+        "MCBE: confira se os arquivos estão em js/addons/ e se o GitHub Pages já publicou o último commit."
+      );
+
+      // Não lança novamente: o restante do site consegue renderizar a mensagem.
+      return false;
     }
+
     return true;
   })(),
 
   getAll() {
-    const local = typeof MCBEStorage !== "undefined" ? MCBEStorage.getLocalAddons() : [];
+    const local =
+      typeof MCBEStorage !== "undefined"
+        ? MCBEStorage.getLocalAddons()
+        : [];
+
     return [...mcbeAddonsBySlug(), ...local]
       .filter((a) => a && a.published)
       .sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
@@ -127,4 +252,3 @@ const MCBE_REPO = {
     return this.getAll().filter((a) => a.featured);
   },
 };
-
