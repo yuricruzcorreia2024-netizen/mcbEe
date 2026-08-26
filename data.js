@@ -1,15 +1,12 @@
 /**
- * MCBE — carregador automático de addons
+ * MCBE — carregador de addons por index.json
  *
- * NÃO edite este arquivo para cadastrar addons.
- *
- * Para adicionar:
- *   js/addons/meu-addon.js
- *   addons/meu-addon.html
- *
- * Os dois arquivos usam o mesmo nome/slug.
+ * Estrutura:
+ *   js/data.js
+ *   js/addons/index.json
+ *   js/addons/<slug>.js
+ *   addons/<slug>.html
  */
-
 const MCBE_CATEGORIES = [
   { id: "addon", label: "Addons" },
   { id: "textura", label: "Texturas" },
@@ -19,186 +16,83 @@ const MCBE_CATEGORIES = [
   { id: "shader", label: "Shaders" },
   { id: "outro", label: "Outros" },
 ];
-
 const MCBE_VERSIONS = ["1.21", "1.20", "1.19", "1.18"];
-
-window.MCBE_ADDONS = Array.isArray(window.MCBE_ADDONS)
-  ? window.MCBE_ADDONS
-  : [];
-
+const MCBE_ADDONS_PATH = "js/addons/";
+window.MCBE_ADDONS = Array.isArray(window.MCBE_ADDONS) ? window.MCBE_ADDONS : [];
 window.MCBE_LOAD_ERROR = null;
 window.MCBE_LOAD_STATUS = "loading";
 
-/* Descobre automaticamente o repositório a partir do GitHub Pages. */
-const mcbePathParts = location.pathname.split("/").filter(Boolean);
-
-const MCBE_SITE_ROOT =
-  location.hostname.endsWith(".github.io") && mcbePathParts.length
-    ? `/${mcbePathParts[0]}/`
-    : "/";
-
-const MCBE_OWNER = location.hostname.endsWith(".github.io")
-  ? location.hostname.replace(/\.github\.io$/i, "")
-  : "";
-
-const MCBE_REPO_NAME =
-  location.hostname.endsWith(".github.io") && mcbePathParts.length
-    ? mcbePathParts[0]
-    : "";
-
-const MCBE_REPOSITORY =
-  MCBE_OWNER && MCBE_REPO_NAME
-    ? `${MCBE_OWNER}/${MCBE_REPO_NAME}`
-    : "";
-
-const MCBE_SITE_BASE = `${location.origin}${MCBE_SITE_ROOT}`;
-const MCBE_GITHUB_API = MCBE_REPOSITORY
-  ? `https://api.github.com/repos/${MCBE_REPOSITORY}`
-  : "";
-
-function mcbeGithubJson(url) {
-  return fetch(url, {
-    headers: { Accept: "application/vnd.github+json" },
-    cache: "no-store",
-  }).then(async (response) => {
-    if (!response.ok) {
-      let detail = "";
-      try {
-        const body = await response.json();
-        detail = body.message ? ` — ${body.message}` : "";
-      } catch (_) {}
-      throw new Error(`GitHub API ${response.status}${detail}`);
-    }
-    return response.json();
-  });
+function mcbeSiteRoot() {
+  const parts = location.pathname.split("/").filter(Boolean);
+  return location.hostname.endsWith(".github.io") && parts.length ? `/${parts[0]}/` : "/";
 }
-
-async function mcbeGetBranch() {
-  if (!MCBE_GITHUB_API) {
-    throw new Error("Não consegui identificar o repositório GitHub.");
-  }
-
-  const repo = await mcbeGithubJson(MCBE_GITHUB_API);
-  return repo.default_branch || "main";
-}
-
-async function mcbeGetAddonFiles() {
-  const branch = await mcbeGetBranch();
-
-  const tree = await mcbeGithubJson(
-    `${MCBE_GITHUB_API}/git/trees/${encodeURIComponent(branch)}?recursive=1`
-  );
-
-  if (!Array.isArray(tree.tree)) {
-    throw new Error("O GitHub não retornou a árvore de arquivos.");
-  }
-
-  return tree.tree
-    .filter(
-      (item) =>
-        item.type === "blob" &&
-        /^js\/addons\/[^/]+\.js$/i.test(item.path)
-    )
-    .map((item) => item.path.replace(/^js\/addons\//i, ""))
-    .sort();
-}
+const MCBE_SITE_BASE = `${location.origin}${mcbeSiteRoot()}`;
+const MCBE_INDEX_URL = `${MCBE_SITE_BASE}${MCBE_ADDONS_PATH}index.json`;
 
 function mcbeLoadScript(filename) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-
-    script.src =
-      `${MCBE_SITE_BASE}js/addons/${encodeURIComponent(filename)}` +
-      `?v=${Date.now()}`;
-
-    script.onload = resolve;
-    script.onerror = () =>
-      reject(new Error(`Não consegui carregar js/addons/${filename}`));
-
+    script.src = `${MCBE_SITE_BASE}${MCBE_ADDONS_PATH}${encodeURIComponent(filename)}?v=${Date.now()}`;
+    script.async = false;
+    script.onload = () => resolve(filename);
+    script.onerror = () => reject(new Error(`Não foi possível carregar js/addons/${filename}`));
     document.head.appendChild(script);
   });
 }
 
-async function mcbeLoadAddons() {
-  const files = await mcbeGetAddonFiles();
-
-  console.log("[MCBE] Repositório:", MCBE_REPOSITORY);
-  console.log("[MCBE] Branch encontrada:", await mcbeGetBranch());
-  console.log("[MCBE] JS encontrados:", files);
-
-  if (!files.length) {
-    throw new Error(
-      "Nenhum .js foi encontrado em js/addons/. " +
-      "Confira o nome da pasta e se o GitHub Pages já publicou o commit."
-    );
-  }
-
-  for (const filename of files) {
-    await mcbeLoadScript(filename);
-  }
-
-  if (!window.MCBE_ADDONS.length) {
-    throw new Error(
-      "Os arquivos .js foram encontrados, mas nenhum deles adicionou " +
-      "um objeto em window.MCBE_ADDONS."
-    );
-  }
-
-  return true;
+async function mcbeGetIndex() {
+  const response = await fetch(`${MCBE_INDEX_URL}?v=${Date.now()}`, { cache: "no-store", headers: { Accept: "application/json" } });
+  if (!response.ok) throw new Error(`Não foi possível carregar js/addons/index.json (HTTP ${response.status}).`);
+  const data = await response.json();
+  const files = Array.isArray(data) ? data : data.addons;
+  if (!Array.isArray(files)) throw new Error("js/addons/index.json está inválido: esperado 'addons'.");
+  return files.map(String).map(s => s.trim()).filter(file => /^[^/]+\.js$/i.test(file));
 }
 
-/* Página individual: addons/meu-addon.html ou ?slug=meu-addon */
-const params = new URLSearchParams(location.search);
+async function mcbeLoadSingleAddon(slug) {
+  const safeSlug = String(slug || "").trim().toLowerCase();
+  if (!safeSlug) throw new Error("Slug do addon não informado.");
+  await mcbeLoadScript(`${safeSlug}.js`);
+}
 
-const pathMatch = location.pathname.match(
-  /\/addons\/([^/]+)\.html$/i
-);
+async function mcbeLoadAllAddons() {
+  const files = await mcbeGetIndex();
+  if (!files.length) throw new Error("js/addons/index.json está vazio.");
+  for (const file of files) await mcbeLoadScript(file);
+}
 
-const MCBE_ADDON_SLUG =
-  pathMatch?.[1]
-    ? decodeURIComponent(pathMatch[1])
-    : params.get("slug");
+function mcbeAddonsBySlug() {
+  const map = new Map();
+  for (const addon of window.MCBE_ADDONS) if (addon && addon.slug) map.set(String(addon.slug), addon);
+  return [...map.values()];
+}
+
+const MCBE_URL_PARAMS = new URLSearchParams(window.location.search);
+const MCBE_PATH_MATCH = window.location.pathname.match(/\/addons\/([^/]+)\.html$/i);
+const MCBE_ADDON_SLUG_VALUE =
+  (typeof MCBE_ADDON_SLUG !== "undefined" && MCBE_ADDON_SLUG) ||
+  (MCBE_PATH_MATCH ? decodeURIComponent(MCBE_PATH_MATCH[1]) : null) ||
+  MCBE_URL_PARAMS.get("slug");
 
 const MCBE_REPO = {
-  ready: mcbeLoadAddons()
-    .then(() => {
+  ready: (async () => {
+    try {
+      if (MCBE_ADDON_SLUG_VALUE) await mcbeLoadSingleAddon(MCBE_ADDON_SLUG_VALUE);
+      else await mcbeLoadAllAddons();
       window.MCBE_LOAD_STATUS = "ready";
-      console.log(
-        `[MCBE] ${window.MCBE_ADDONS.length} addon(s) carregado(s).`
-      );
+      console.log(`[MCBE] ${window.MCBE_ADDONS.length} addon(s) carregado(s).`);
       return true;
-    })
-    .catch((error) => {
+    } catch (error) {
       window.MCBE_LOAD_STATUS = "error";
       window.MCBE_LOAD_ERROR = error;
-      console.error("[MCBE] ERRO AO CARREGAR ADDONS:", error);
+      console.error("[MCBE] Erro carregando addons:", error);
       return false;
-    }),
-
+    }
+  })(),
   getAll() {
-    const list = Array.isArray(window.MCBE_ADDONS)
-      ? window.MCBE_ADDONS
-      : [];
-
-    const local =
-      typeof MCBEStorage !== "undefined"
-        ? MCBEStorage.getLocalAddons()
-        : [];
-
-    const map = new Map();
-
-    [...list, ...local].forEach((addon) => {
-      if (addon && addon.slug) map.set(addon.slug, addon);
-    });
-
-    return [...map.values()].filter((addon) => addon.published !== false);
+    const local = typeof MCBEStorage !== "undefined" && MCBEStorage.getLocalAddons ? MCBEStorage.getLocalAddons() : [];
+    return [...mcbeAddonsBySlug(), ...local].filter(a => a && a.published !== false).sort((a,b) => Number(a.id||0)-Number(b.id||0));
   },
-
-  getBySlug(slug) {
-    return this.getAll().find((addon) => addon.slug === slug) || null;
-  },
-
-  getFeatured() {
-    return this.getAll().filter((addon) => addon.featured);
-  },
+  getBySlug(slug) { return this.getAll().find(a => a.slug === slug) || null; },
+  getFeatured() { return this.getAll().filter(a => a.featured); },
 };

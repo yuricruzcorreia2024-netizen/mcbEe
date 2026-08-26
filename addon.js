@@ -1,19 +1,10 @@
-(async function () {
-  // Aguarda data.js carregar o JS correspondente ao slug da página.
-  const loaded = await MCBE_REPO.ready;
-
-  if (!loaded) {
-    const root = document.getElementById("addonRoot");
-    if (root) {
-      root.innerHTML = `
-        <p class="empty-state">
-          Não foi possível carregar este addon.
-          <br><small>${window.MCBE_LOAD_ERROR?.message || ""}</small>
-        </p>`;
+(function () {
+  MCBE_REPO.ready.then((loaded) => {
+    if (!loaded) {
+      const root = document.getElementById("addonRoot");
+      if (root) root.innerHTML = `<p class="empty-state">Não foi possível carregar este addon.<br><small>${window.MCBE_LOAD_ERROR?.message || "Erro desconhecido."}</small></p>`;
+      return;
     }
-    return;
-  }
-
   const slug =
     (typeof MCBE_ADDON_SLUG !== "undefined" && MCBE_ADDON_SLUG) ||
     new URLSearchParams(window.location.search).get("slug");
@@ -22,7 +13,7 @@
   const addon = slug ? MCBE_REPO.getBySlug(slug) : null;
 
   if (!addon) {
-    root.innerHTML = `<p class="empty-state">Conteúdo não encontrado. <a href="index.html" style="color:var(--grass)">Voltar ao catálogo</a></p>`;
+    root.innerHTML = `<p class="empty-state">Conteúdo não encontrado. <a href="../index.html" style="color:var(--grass)">Voltar ao catálogo</a></p>`;
     return;
   }
 
@@ -35,7 +26,7 @@
   setMeta('meta[property="og:title"]', "content", `${addon.title} | MCBE`);
   setMeta('meta[property="og:description"]', "content", addon.description);
   setMeta('meta[property="og:image"]', "content", addon.thumbnail);
-  setMeta('link[rel="canonical"]', "href", `${location.origin}${location.pathname}`);
+  setMeta('link[rel="canonical"]', "href", `https://yuricruzcorreia2024-netizen.github.io/mcbEe/addons/${addon.slug}.html`);
 
   let galleryIndex = 0;
 
@@ -72,7 +63,7 @@
       .slice(0, 4)
       .map(
         (a) => `
-      <a href="addon.html?slug=${a.slug}" class="mini-item">
+      <a href="../${a.page || `addons/${a.slug}.html`}" class="mini-item">
         <img src="${a.thumbnail}" alt="${a.title}">
         <div>
           <div class="t">${a.title}</div>
@@ -89,7 +80,7 @@
 
   root.innerHTML = `
     <div class="breadcrumb">
-      <a href="index.html">Início</a> / <a href="index.html?cat=${addon.category}">${mcbeCategoryLabel(addon.category)}</a> / ${addon.title}
+      <a href="../index.html">Início</a> / <a href="../index.html?cat=${addon.category}">${mcbeCategoryLabel(addon.category)}</a> / ${addon.title}
     </div>
 
     <div class="addon-header">
@@ -196,6 +187,5 @@
   document.getElementById("hamburgerBtn")?.addEventListener("click", () => {
     document.getElementById("mobileNav").classList.toggle("open");
   });
-})();
-
+  });
 })();
