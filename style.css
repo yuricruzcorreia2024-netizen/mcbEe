@@ -655,8 +655,11 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--surface); border: 1px solid var(--border);
   box-shadow: var(--pixel-out);
   display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
   font-size: 13px;
+  transition: color 0.15s;
 }
+.footer-social a:hover { color: var(--grass); }
 .footer-bottom {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 10px;
