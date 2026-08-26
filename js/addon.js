@@ -1,5 +1,10 @@
 (function () {
-  MCBE_REPO.ready.then(() => {
+  MCBE_REPO.ready.then((loaded) => {
+    if (!loaded) {
+      const root = document.getElementById("addonRoot");
+      if (root) root.innerHTML = `<p class="empty-state">Não foi possível carregar este addon.<br><small>${window.MCBE_LOAD_ERROR?.message || "Erro desconhecido."}</small></p>`;
+      return;
+    }
   const slug =
     (typeof MCBE_ADDON_SLUG !== "undefined" && MCBE_ADDON_SLUG) ||
     new URLSearchParams(window.location.search).get("slug");

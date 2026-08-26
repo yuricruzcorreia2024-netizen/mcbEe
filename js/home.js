@@ -1,5 +1,12 @@
 (function () {
-  MCBE_REPO.ready.then(() => {
+  MCBE_REPO.ready.then((loaded) => {
+    if (!loaded) {
+      const grid = document.getElementById("catalogGrid");
+      const resultCount = document.getElementById("resultCount");
+      if (resultCount) resultCount.textContent = "erro ao carregar";
+      if (grid) grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><strong>Não foi possível carregar os addons.</strong><br><small>${window.MCBE_LOAD_ERROR?.message || "Erro desconhecido."}</small></div>`;
+      return;
+    }
   const PAGE_SIZE = 8;
   let state = {
     query: "",
