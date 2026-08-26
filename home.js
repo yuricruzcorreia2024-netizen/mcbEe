@@ -1,4 +1,30 @@
-(function () {
+(async function () {
+  // O catálogo só renderiza depois que data.js terminar de carregar
+  // os arquivos individuais de js/addons/.
+  const loaded = await MCBE_REPO.ready;
+
+  if (!loaded) {
+    const grid = document.getElementById("catalogGrid");
+    const resultCount = document.getElementById("resultCount");
+
+    if (resultCount) resultCount.textContent = "erro ao carregar";
+
+    if (grid) {
+      const errorText =
+        window.MCBE_LOAD_ERROR?.message ||
+        "Não foi possível carregar os arquivos de addons.";
+
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <strong>Não foi possível carregar os addons.</strong><br>
+          <small>${errorText}</small><br>
+          <small>Confirme se os arquivos estão em <b>js/addons/</b> e faça Ctrl+F5.</small>
+        </div>`;
+    }
+
+    return;
+  }
+
   const PAGE_SIZE = 8;
   let state = {
     query: "",
@@ -38,7 +64,7 @@
     const fav = MCBEStorage.isFavorite(addon.slug);
     return `
     <div class="card">
-      <a href="addon.html?slug=${addon.slug}" aria-label="${addon.title}">
+      <a href="addons/${addon.slug}.html" aria-label="${addon.title}">
         <div class="card-thumb">
           <img src="${addon.thumbnail}" alt="${addon.title}" loading="lazy">
           <span class="card-cat">${mcbeCategoryLabel(addon.category)}</span>
@@ -46,7 +72,7 @@
       </a>
       <button class="card-fav ${fav ? "active" : ""}" data-slug="${addon.slug}" aria-label="Favoritar">${fav ? "♥" : "♡"}</button>
       <div class="card-body">
-        <a href="addon.html?slug=${addon.slug}">
+        <a href="addons/${addon.slug}.html">
           <h3 class="card-title">${addon.title}</h3>
         </a>
         <span class="card-author">Por ${addon.author}</span>
@@ -55,7 +81,7 @@
           <span>v${addon.version}</span>
           <span class="downloads">↓ ${mcbeFormatNumber(mcbeDownloadCount(addon))}</span>
         </div>
-        <a href="addon.html?slug=${addon.slug}" class="btn btn-primary btn-block">Baixar</a>
+        <a href="addons/${addon.slug}.html" class="btn btn-primary btn-block">Baixar</a>
       </div>
     </div>`;
   }
@@ -195,7 +221,7 @@
     btn.disabled = true;
     setTimeout(() => {
       const pick = all[Math.floor(Math.random() * all.length)];
-      window.location.href = `addon.html?slug=${pick.slug}`;
+      window.location.href = `addons/${pick.slug}.html`;
     }, 600);
   });
 
@@ -211,4 +237,6 @@
   renderChips();
   renderFeatured();
   render();
+})();
+
 })();
