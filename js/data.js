@@ -1,11 +1,13 @@
 /**
- * MCBE — dados de demonstração
- * -----------------------------------------------------------------------
- * Este arquivo simula o que, no futuro, virá do Supabase (tabela "addons").
- * Cada objeto segue exatamente os campos descritos na especificação do
- * projeto, então trocar isso por uma consulta real ao banco não deve
- * exigir mudar nada no resto do app — só a função getAllContent().
- * -----------------------------------------------------------------------
+ * MCBE — carregador de addons
+ *
+ * Estrutura nova:
+ *   js/addons/<slug>.js
+ *   addons/<slug>.html
+ *
+ * Cada arquivo JS registra um único addon em window.MCBE_ADDONS.
+ * No catálogo, o loader descobre todos os JS da pasta pelo GitHub API.
+ * Nas páginas individuais, carrega somente o JS cujo nome é igual ao HTML.
  */
 
 const MCBE_CATEGORIES = [
@@ -19,495 +21,90 @@ const MCBE_CATEGORIES = [
 ];
 
 const MCBE_VERSIONS = ["1.21", "1.20", "1.19", "1.18"];
+const MCBE_ADDONS_PATH = "js/addons/";
+const MCBE_GITHUB_REPO = "yuricruzcorreia2024-netizen/mcbEe";
+const MCBE_GITHUB_BRANCH = "main";
+const MCBE_ADDONS_API = `https://api.github.com/repos/${MCBE_GITHUB_REPO}/git/trees/${MCBE_GITHUB_BRANCH}?recursive=1`;
+const MCBE_RAW_BASE = `https://raw.githubusercontent.com/${MCBE_GITHUB_REPO}/${MCBE_GITHUB_BRANCH}/`;
 
-const MCBE_DATA = [
-  {
-    id: 1,
-    title: "VeinMiner",
-    slug: "veinminer",
-    category: "addon",
-    author: "MCBE Studio",
-    description: "Quebre veios inteiros de minério de uma só vez.",
-    long_description:
-      "VeinMiner detecta blocos do mesmo tipo conectados ao bloco minerado e quebra todos em cadeia, respeitando a durabilidade da ferramenta. Funciona com minérios, madeira e blocos configuráveis. Ideal para quem quer minerar mais rápido sem perder o ritmo da sobrevivência normal.",
-    version: "2.3.1",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1607220716845-31c93a80ce43?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1607220716845-31c93a80ce43?w=1200&q=80",
-      "https://images.unsplash.com/photo-1618420253168-96da01d867de?w=1200&q=80",
-      "https://images.unsplash.com/photo-1548407260-da850faa41e3?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/veinminer.mcaddon",
-    download_count: 25430,
-    featured: true,
-    published: true,
-    tags: ["mineração", "produtividade", "sobrevivência"],
-    created_at: "2026-06-02",
-    updated_at: "2026-08-10",
-  },
-  {
-    id: 2,
-    title: "Aurora Shaders",
-    slug: "aurora-shaders",
-    category: "shader",
-    author: "LumenCraft",
-    description: "Iluminação volumétrica, água realista e céu dinâmico para Bedrock.",
-    long_description:
-      "Aurora Shaders reformula a iluminação do jogo com sombras suaves, reflexos de água e um ciclo de céu mais dramático, mantendo o desempenho estável em aparelhos médios. Inclui três perfis: Leve, Padrão e Cinemático.",
-    version: "4.0.0",
-    minecraft_versions: ["1.21", "1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&q=80",
-      "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/aurora-shaders.mcpack",
-    download_count: 51820,
-    featured: true,
-    published: true,
-    tags: ["visual", "iluminação", "gráficos"],
-    created_at: "2026-05-14",
-    updated_at: "2026-08-20",
-  },
-  {
-    id: 3,
-    title: "Reino Perdido de Kaldor",
-    slug: "reino-perdido-de-kaldor",
-    category: "mapa",
-    author: "Kaldor Team",
-    description: "Um reino em ruínas para explorar, com quebra-cabeças e chefes.",
-    long_description:
-      "Mapa de aventura com seis regiões distintas, três masmorras com puzzles de redstone e dois combates de chefe. Feito para 1 a 4 jogadores, com marcos de checkpoint e loot balanceado para dificuldade Normal.",
-    version: "1.2.0",
-    minecraft_versions: ["1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1200&q=80",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/reino-de-kaldor.mcworld",
-    download_count: 12870,
-    featured: false,
-    published: true,
-    tags: ["aventura", "puzzle", "multiplayer"],
-    created_at: "2026-07-01",
-    updated_at: "2026-07-01",
-  },
-  {
-    id: 4,
-    title: "Texturas Rústicas 32x",
-    slug: "texturas-rusticas-32x",
-    category: "textura",
-    author: "PixelForge",
-    description: "Pacote de texturas em estilo rústico, com madeiras e pedras mais vivas.",
-    long_description:
-      "Um resource pack 32x32 que mantém a identidade do Minecraft, mas dá mais textura e profundidade a madeiras, pedras e terrenos. Compatível com a maioria dos addons visuais e shaders leves.",
-    version: "3.1.0",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1524230507669-5ff97982bb5e?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1524230507669-5ff97982bb5e?w=1200&q=80",
-      "https://images.unsplash.com/photo-1601987077677-5346c0c57d3f?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/texturas-rusticas.mcpack",
-    download_count: 33210,
-    featured: false,
-    published: true,
-    tags: ["texturas", "estética", "leve"],
-    created_at: "2026-04-18",
-    updated_at: "2026-06-30",
-  },
-  {
-    id: 5,
-    title: "Guardiões do Nether",
-    slug: "guardioes-do-nether",
-    category: "addon",
-    author: "NetherWorks",
-    description: "Novas criaturas e um chefe exclusivo para o Nether.",
-    long_description:
-      "Adiciona quatro criaturas ao Nether, incluindo o chefe 'Cindral, o Incinerado', com fases de combate e loot próprio. Balanceado para não quebrar a progressão vanilla.",
-    version: "1.5.2",
-    minecraft_versions: ["1.21"],
-    thumbnail: "https://images.unsplash.com/photo-1618044733300-9472054094ee?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1618044733300-9472054094ee?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/guardioes-nether.mcaddon",
-    download_count: 18990,
-    featured: false,
-    published: true,
-    tags: ["chefe", "criaturas", "nether"],
-    created_at: "2026-07-15",
-    updated_at: "2026-08-05",
-  },
-  {
-    id: 6,
-    title: "Skin Pack: Andarilhos",
-    slug: "skin-pack-andarilhos",
-    category: "skin",
-    author: "SkinFolks",
-    description: "24 skins de personagens viajantes e exploradores.",
-    long_description:
-      "Um pacote com 24 skins originais em tema de exploração — mercadores, cartógrafos e aventureiros. Todas otimizadas para o modelo padrão do Bedrock, com variações slim e clássica.",
-    version: "1.0.0",
-    minecraft_versions: ["1.21", "1.20", "1.19", "1.18"],
-    thumbnail: "https://images.unsplash.com/photo-1608889825205-eebdb9fc5806?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1608889825205-eebdb9fc5806?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/skins-andarilhos.mcpack",
-    download_count: 9540,
-    featured: false,
-    published: true,
-    tags: ["skins", "personagens"],
-    created_at: "2026-03-22",
-    updated_at: "2026-03-22",
-  },
-  {
-    id: 7,
-    title: "Fazenda Automática Plus",
-    slug: "fazenda-automatica-plus",
-    category: "addon",
-    author: "RedstoneLab",
-    description: "Estruturas e itens para automatizar plantações e criação de animais.",
-    long_description:
-      "Adiciona coletores automáticos de colheita, comedouros inteligentes e um funil de longo alcance. Pensado para quem gosta de tecnicismo sem depender só de redstone puro.",
-    version: "2.0.4",
-    minecraft_versions: ["1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/fazenda-automatica.mcaddon",
-    download_count: 27650,
-    featured: false,
-    published: true,
-    tags: ["automação", "fazenda", "tecnicismo"],
-    created_at: "2026-02-11",
-    updated_at: "2026-05-19",
-  },
-  {
-    id: 8,
-    title: "Ilhas Flutuantes: Aetherion",
-    slug: "ilhas-flutuantes-aetherion",
-    category: "mapa",
-    author: "SkyForge Maps",
-    description: "Um arquipélago no céu para sobrevivência hardcore.",
-    long_description:
-      "Mundo de skyblock expandido, com sete ilhas temáticas conectadas por pontes de corda. Recursos limitados de propósito, pensado para partidas de sobrevivência mais longas.",
-    version: "1.1.0",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/aetherion.mcworld",
-    download_count: 15230,
-    featured: false,
-    published: true,
-    tags: ["skyblock", "sobrevivência", "hardcore"],
-    created_at: "2026-06-28",
-    updated_at: "2026-06-28",
-  },
-  {
-    id: 9,
-    title: "Resource Pack Minimal HD",
-    slug: "resource-pack-minimal-hd",
-    category: "resource-pack",
-    author: "CleanCraft",
-    description: "Texturas limpas e planas em resolução 64x, sem exageros.",
-    long_description:
-      "Um pack focado em legibilidade: cores mais neutras, contraste equilibrado e interface levemente redesenhada. Bom para quem grava vídeo e quer uma estética discreta.",
-    version: "5.2.0",
-    minecraft_versions: ["1.21", "1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1615680022647-99c397cbcaea?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1615680022647-99c397cbcaea?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/minimal-hd.mcpack",
-    download_count: 41200,
-    featured: true,
-    published: true,
-    tags: ["minimalista", "hd", "gravação"],
-    created_at: "2026-01-30",
-    updated_at: "2026-08-01",
-  },
-  {
-    id: 10,
-    title: "Bestiário Expandido",
-    slug: "bestiario-expandido",
-    category: "addon",
-    author: "FaunaCraft",
-    description: "12 novas criaturas neutras e hostis espalhadas por todos os biomas.",
-    long_description:
-      "Adiciona criaturas com IA própria, incluindo comportamentos de matilha e fuga. Cada criatura tem drops exclusivos que se integram ao crafting vanilla.",
-    version: "3.4.1",
-    minecraft_versions: ["1.20", "1.19", "1.18"],
-    thumbnail: "https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/bestiario-expandido.mcaddon",
-    download_count: 22110,
-    featured: false,
-    published: true,
-    tags: ["criaturas", "biomas", "ia"],
-    created_at: "2026-05-02",
-    updated_at: "2026-07-12",
-  },
-  {
-    id: 11,
-    title: "Vila Medieval: Thornfield",
-    slug: "vila-medieval-thornfield",
-    category: "mapa",
-    author: "BuildGuild",
-    description: "Uma vila medieval totalmente construída à mão, pronta para habitar.",
-    long_description:
-      "Mapa de construção com mais de 40 estruturas: taberna, ferraria, muralhas e castelo central. Ótimo ponto de partida para servidores de roleplay.",
-    version: "1.0.3",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1520333789090-1afc82db536a?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1520333789090-1afc82db536a?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/thornfield.mcworld",
-    download_count: 8760,
-    featured: false,
-    published: true,
-    tags: ["construção", "medieval", "roleplay"],
-    created_at: "2026-07-20",
-    updated_at: "2026-07-20",
-  },
-  {
-    id: 12,
-    title: "Interface Compacta",
-    slug: "interface-compacta",
-    category: "outro",
-    author: "UI Works",
-    description: "Reduz o HUD e os ícones da interface para telas menores.",
-    long_description:
-      "Um ajuste de interface que diminui barras, ícones e textos, pensado para jogadores de celular que querem mais tela visível durante a jogatina.",
-    version: "1.3.0",
-    minecraft_versions: ["1.21", "1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/interface-compacta.mcpack",
-    download_count: 13400,
-    featured: false,
-    published: true,
-    tags: ["interface", "mobile", "hud"],
-    created_at: "2026-04-05",
-    updated_at: "2026-04-05",
-  },
-  {
-    id: 13,
-    title: "Dungeon Randômica",
-    slug: "dungeon-randomica",
-    category: "addon",
-    author: "LabyrinthDev",
-    description: "Gera masmorras proceduralmente conforme você explora cavernas.",
-    long_description:
-      "Ao entrar em determinadas cavernas, o addon gera salas de masmorra com baús, armadilhas e mobs especiais, diferentes a cada visita. Sistema baseado em estruturas configuráveis.",
-    version: "0.9.5",
-    minecraft_versions: ["1.21"],
-    thumbnail: "https://images.unsplash.com/photo-1520962880247-cfaf541c8724?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1520962880247-cfaf541c8724?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/dungeon-randomica.mcaddon",
-    download_count: 6980,
-    featured: false,
-    published: true,
-    tags: ["masmorra", "procedural", "exploração"],
-    created_at: "2026-08-01",
-    updated_at: "2026-08-15",
-  },
-  {
-    id: 14,
-    title: "Shaders Realistic Low-End",
-    slug: "shaders-realistic-low-end",
-    category: "shader",
-    author: "LumenCraft",
-    description: "Sombras e reflexos leves, otimizados para aparelhos fracos.",
-    long_description:
-      "Versão enxuta dos shaders realistas, mantendo sombras suaves e reflexo básico de água, com foco em rodar bem em celulares de entrada.",
-    version: "1.4.0",
-    minecraft_versions: ["1.20", "1.19", "1.18"],
-    thumbnail: "https://images.unsplash.com/photo-1441829266145-9a5bd3d40dd6?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1441829266145-9a5bd3d40dd6?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/realistic-low-end.mcpack",
-    download_count: 29870,
-    featured: false,
-    published: true,
-    tags: ["leve", "mobile", "gráficos"],
-    created_at: "2026-03-11",
-    updated_at: "2026-06-02",
-  },
-  {
-    id: 15,
-    title: "Corrida de Elytra: Canyon Rush",
-    slug: "corrida-de-elytra-canyon-rush",
-    category: "mapa",
-    author: "SkyForge Maps",
-    description: "Pista de corrida com elytra por um cânion cheio de obstáculos.",
-    long_description:
-      "Mapa de minigame para 1 a 8 jogadores, com checkpoints, anéis de foguete e um sistema de tempo por comando. Três dificuldades de percurso.",
-    version: "2.1.0",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1533240332313-0db49b459ad6?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1533240332313-0db49b459ad6?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/canyon-rush.mcworld",
-    download_count: 19540,
-    featured: false,
-    published: true,
-    tags: ["minigame", "corrida", "multiplayer"],
-    created_at: "2026-06-14",
-    updated_at: "2026-06-14",
-  },
-  {
-    id: 16,
-    title: "Texturas PvP Nítidas",
-    slug: "texturas-pvp-nitidas",
-    category: "textura",
-    author: "SharpEdge",
-    description: "Pacote focado em legibilidade de combate, cores de time e hitbox.",
-    long_description:
-      "Reduz partículas visuais desnecessárias e aumenta o contraste de armaduras e itens, pensado para servidores de PvP e torneios.",
-    version: "2.2.0",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/pvp-nitidas.mcpack",
-    download_count: 24680,
-    featured: false,
-    published: true,
-    tags: ["pvp", "competitivo", "clareza"],
-    created_at: "2026-05-25",
-    updated_at: "2026-07-03",
-  },
-  {
-    id: 17,
-    title: "Skin Pack: Guardiões de Cristal",
-    slug: "skin-pack-guardioes-de-cristal",
-    category: "skin",
-    author: "SkinFolks",
-    description: "16 skins com armaduras de cristal em estilo fantasia.",
-    long_description:
-      "Pacote temático de fantasia com armaduras brilhantes e detalhes de cristal. Compatível com capas customizadas.",
-    version: "1.1.0",
-    minecraft_versions: ["1.21", "1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/guardioes-de-cristal.mcpack",
-    download_count: 7320,
-    featured: false,
-    published: true,
-    tags: ["skins", "fantasia"],
-    created_at: "2026-02-19",
-    updated_at: "2026-02-19",
-  },
-  {
-    id: 18,
-    title: "Comércio Expandido",
-    slug: "comercio-expandido",
-    category: "addon",
-    author: "TradeCraft",
-    description: "Novas profissões e itens de troca para os aldeões.",
-    long_description:
-      "Adiciona seis novas profissões de aldeão com trocas exclusivas, além de rebalancear preços de trocas vanilla para incentivar o comércio.",
-    version: "1.8.0",
-    minecraft_versions: ["1.20", "1.19"],
-    thumbnail: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/comercio-expandido.mcaddon",
-    download_count: 16750,
-    featured: false,
-    published: true,
-    tags: ["economia", "aldeões", "comércio"],
-    created_at: "2026-04-29",
-    updated_at: "2026-06-18",
-  },
-  {
-    id: 19,
-    title: "Vulcão: Terra em Chamas",
-    slug: "vulcao-terra-em-chamas",
-    category: "mapa",
-    author: "Kaldor Team",
-    description: "Sobreviva em uma ilha vulcânica ativa com erupções cronometradas.",
-    long_description:
-      "Mapa de sobrevivência com evento de erupção a cada ciclo de jogo, obrigando o jogador a se planejar e construir abrigos resistentes a lava.",
-    version: "1.0.1",
-    minecraft_versions: ["1.21"],
-    thumbnail: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/terra-em-chamas.mcworld",
-    download_count: 5410,
-    featured: false,
-    published: true,
-    tags: ["sobrevivência", "evento", "desafio"],
-    created_at: "2026-08-12",
-    updated_at: "2026-08-12",
-  },
-  {
-    id: 20,
-    title: "Ferramentas Encantadas Plus",
-    slug: "ferramentas-encantadas-plus",
-    category: "addon",
-    author: "RedstoneLab",
-    description: "Novos encantamentos e ferramentas com habilidades ativáveis.",
-    long_description:
-      "Adiciona picaretas, machados e espadas com uma habilidade especial ativável (clique direito), como um pulso de mineração ou um golpe em área, todos com tempo de recarga.",
-    version: "1.6.3",
-    minecraft_versions: ["1.21", "1.20"],
-    thumbnail: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=600&q=80",
-    screenshots: [
-      "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=1200&q=80",
-    ],
-    download_url: "https://example.com/downloads/ferramentas-encantadas.mcaddon",
-    download_count: 34990,
-    featured: false,
-    published: true,
-    tags: ["ferramentas", "encantamento", "habilidades"],
-    created_at: "2026-01-08",
-    updated_at: "2026-05-27",
-  },
-];
+window.MCBE_ADDONS = window.MCBE_ADDONS || [];
 
-/**
- * Camada de acesso aos dados. Hoje lê o array acima; no futuro, troque o
- * corpo destas funções por chamadas ao Supabase (mesma assinatura).
- */
+function mcbeAddonsBySlug() {
+  const map = new Map();
+  for (const addon of window.MCBE_ADDONS) {
+    if (addon && addon.slug) map.set(addon.slug, addon);
+  }
+  return [...map.values()];
+}
+
+function mcbeLoadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Não foi possível carregar ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+async function mcbeLoadSingleAddon(slug) {
+  const safeSlug = String(slug || "").toLowerCase().trim();
+  if (!safeSlug) return;
+  await mcbeLoadScript(`${MCBE_RAW_BASE}${MCBE_ADDONS_PATH}${encodeURIComponent(safeSlug)}.js`);
+}
+
+async function mcbeLoadAllAddons() {
+  const response = await fetch(MCBE_ADDONS_API, {
+    headers: { Accept: "application/vnd.github+json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub API respondeu ${response.status}.`);
+  }
+
+  const tree = await response.json();
+  const files = (tree.tree || [])
+    .filter((item) => item.type === "blob")
+    .map((item) => item.path)
+    .filter((p) => /^js\/addons\/[^/]+\.js$/i.test(p));
+
+  await Promise.all(files.map((file) => mcbeLoadScript(`${MCBE_RAW_BASE}${file}`)));
+}
+
+const MCBE_ADDON_SLUG_VALUE =
+  typeof MCBE_ADDON_SLUG !== "undefined"
+    ? MCBE_ADDON_SLUG
+    : new URLSearchParams(window.location.search).get("slug");
+
 const MCBE_REPO = {
+  ready: (async () => {
+    try {
+      if (MCBE_ADDON_SLUG_VALUE) {
+        await mcbeLoadSingleAddon(MCBE_ADDON_SLUG_VALUE);
+      } else {
+        await mcbeLoadAllAddons();
+      }
+    } catch (error) {
+      console.error("MCBE: erro carregando addons", error);
+    }
+    return true;
+  })(),
+
   getAll() {
-    const local = MCBEStorage ? MCBEStorage.getLocalAddons() : [];
-    return [...MCBE_DATA, ...local].filter((a) => a.published);
+    const local = typeof MCBEStorage !== "undefined" ? MCBEStorage.getLocalAddons() : [];
+    return [...mcbeAddonsBySlug(), ...local]
+      .filter((a) => a && a.published)
+      .sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
   },
+
   getBySlug(slug) {
     return this.getAll().find((a) => a.slug === slug) || null;
   },
+
   getFeatured() {
     return this.getAll().filter((a) => a.featured);
   },
 };
 
-// Permite reaproveitar MCBE_DATA/MCBE_CATEGORIES no script Node que gera
-// as páginas estáticas de cada addon (generate-addon-pages.js). Não afeta
-// o navegador: "module" não existe lá, então este bloco é ignorado.
-if (typeof module !== "undefined") {
-  module.exports = { MCBE_DATA, MCBE_CATEGORIES };
-}
