@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texturas Rústicas 32x — Addon para Minecraft Bedrock | MCBE</title>
+<meta name="description" content="Pacote de texturas em estilo rústico, com madeiras e pedras mais vivas.">
+<meta property="og:title" content="Texturas Rústicas 32x | MCBE">
+<meta property="og:description" content="Pacote de texturas em estilo rústico, com madeiras e pedras mais vivas.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://images.unsplash.com/photo-1524230507669-5ff97982bb5e?w=600&q=80">
+<link rel="icon" href="../img/logo.png">
+<link rel="canonical" href="https://exemplo-mcbe.github.io/addons/texturas-rusticas-32x.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Texturas Rústicas 32x",
+  "applicationCategory": "Game",
+  "operatingSystem": "Minecraft Bedrock Edition",
+  "description": "Pacote de texturas em estilo rústico, com madeiras e pedras mais vivas.",
+  "author": { "@type": "Person", "name": "PixelForge" }
+}
+</script>
+<link rel="stylesheet" href="../css/style.css">
+<script>const MCBE_ADDON_SLUG = "texturas-rusticas-32x";</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner container">
+    <a href="../index.html" class="brand"><img src="../img/logo.png" alt="MCBE"> MCBE</a>
+    <nav class="main-nav">
+      <a href="../index.html">Início</a>
+      <a href="../index.html?cat=addon">Addons</a>
+      <a href="../index.html?cat=textura">Texturas</a>
+      <a href="../index.html?cat=mapa">Mapas</a>
+      <a href="../sobre.html">Sobre</a>
+    </nav>
+    <div class="header-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="Pesquisar..." onkeydown="if(event.key==='Enter'){window.location='../index.html'}">
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="../index.html">Início</a>
+    <a href="../index.html?cat=addon">Addons</a>
+    <a href="../sobre.html">Sobre</a>
+  </div>
+</header>
+
+<main class="container" style="padding-top:28px;padding-bottom:60px;">
+  <div id="addonRoot"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="disclaimer">MCBE não possui vínculo com Mojang Studios ou Microsoft. Minecraft é uma marca registrada de Mojang Studios.</p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../js/storage.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/addon.js"></script>
+</body>
+</html>

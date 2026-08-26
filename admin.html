@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel administrativo — MCBE</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="img/logo.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="lockScreen" class="admin-lock">
+  <div class="admin-lock-card">
+    <img src="img/logo.png" alt="MCBE" style="width:48px;height:48px;border-radius:10px;margin:0 auto 6px;">
+    <h2 style="font-family:var(--font-display);margin:10px 0 4px;">Painel MCBE</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin:0;">Digite a chave de acesso para entrar.</p>
+    <input type="password" id="keyInput" placeholder="Chave de acesso" autocomplete="off">
+    <button class="btn btn-primary btn-block" id="unlockBtn">Entrar</button>
+    <p id="lockError" style="color:var(--danger);font-size:12px;margin-top:10px;display:none;">Chave incorreta.</p>
+  </div>
+</div>
+
+<div id="adminShell" class="admin-shell" style="display:none;">
+  <aside class="admin-side">
+    <a href="index.html" class="brand" style="text-decoration:none;"><img src="img/logo.png" alt="MCBE" style="width:28px;height:28px;border-radius:6px;"> MCBE</a>
+    <nav>
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="addons">Addons</button>
+      <button class="nav-btn" data-view="novo">Novo addon</button>
+    </nav>
+    <button class="btn btn-ghost btn-block" id="lockOutBtn" style="margin-top:24px;">Sair</button>
+    <a href="index.html" class="btn btn-secondary btn-block" style="margin-top:8px;">Ver site</a>
+  </aside>
+
+  <main class="admin-main">
+    <section id="view-dashboard"></section>
+    <section id="view-addons" style="display:none;"></section>
+    <section id="view-novo" style="display:none;"></section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/data.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

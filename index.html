@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCBE — Addons, texturas e mapas para Minecraft Bedrock</title>
+<meta name="description" content="Catálogo independente de addons, texturas, resource packs, mapas, skins e shaders para Minecraft Bedrock Edition.">
+<meta property="og:title" content="MCBE — Catálogo de addons para Minecraft Bedrock">
+<meta property="og:description" content="Encontre os melhores addons, mapas, texturas e conteúdos para Minecraft Bedrock.">
+<meta property="og:type" content="website">
+<link rel="icon" href="img/logo.png">
+<link rel="canonical" href="https://exemplo-mcbe.github.io/">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner container">
+    <a href="index.html" class="brand"><img src="img/logo.png" alt="MCBE"> MCBE</a>
+    <nav class="main-nav">
+      <a href="index.html" class="active">Início</a>
+      <a href="index.html?cat=addon">Addons</a>
+      <a href="index.html?cat=textura">Texturas</a>
+      <a href="index.html?cat=mapa">Mapas</a>
+      <a href="index.html#categorias">Categorias</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="headerSearch" type="text" placeholder="Pesquisar...">
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="index.html">Início</a>
+    <a href="index.html?cat=addon">Addons</a>
+    <a href="index.html?cat=textura">Texturas</a>
+    <a href="index.html?cat=mapa">Mapas</a>
+    <a href="sobre.html">Sobre</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">Minecraft Bedrock · catálogo da comunidade</span>
+    <h1>Addons de Minecraft Bedrock</h1>
+    <p>Encontre os melhores addons, mapas, texturas e conteúdos para Minecraft Bedrock.</p>
+    <div class="hero-actions">
+      <a href="#colecao" class="btn btn-primary">Ver addons</a>
+      <button class="btn btn-secondary surprise-btn" id="surpriseBtn">🎲 Surpreenda-me</button>
+    </div>
+    <div class="hero-search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="heroSearch" type="text" placeholder="Buscar addons, texturas, mapas...">
+    </div>
+  </div>
+</section>
+
+<section class="section" id="destaque-wrap">
+  <div class="container">
+    <div class="section-head">
+      <div class="titles">
+        <div class="strata-bar"></div>
+        <h2>Destaque</h2>
+      </div>
+    </div>
+    <div id="featuredSlot"></div>
+  </div>
+</section>
+
+<section class="section" id="colecao">
+  <div class="container">
+    <div class="section-head">
+      <div class="titles">
+        <div class="strata-bar"></div>
+        <h2>Coleção</h2>
+      </div>
+      <span class="count" id="resultCount">0 conteúdos</span>
+    </div>
+
+    <div class="chip-row" id="categoriaChips"></div>
+
+    <div class="toolbar">
+      <select class="select" id="sortSelect">
+        <option value="recent">Mais recentes</option>
+        <option value="downloads">Mais baixados</option>
+        <option value="popular">Populares</option>
+        <option value="featured">Destaques</option>
+        <option value="random">Aleatório</option>
+      </select>
+      <select class="select" id="versionSelect">
+        <option value="">Todas as versões</option>
+        <option value="1.21">1.21</option>
+        <option value="1.20">1.20</option>
+        <option value="1.19">1.19</option>
+        <option value="1.18">1.18</option>
+      </select>
+    </div>
+
+    <div class="grid" id="catalogGrid"></div>
+    <p class="empty-state" id="emptyState" style="display:none;">Nenhum conteúdo encontrado.</p>
+
+    <div class="load-more-wrap">
+      <button class="btn btn-secondary" id="loadMoreBtn">Carregar mais</button>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><img src="img/logo.png" alt="MCBE"> MCBE</div>
+        <p>Catálogo independente de conteúdos para Minecraft Bedrock.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Discord">💬</a>
+          <a href="#" aria-label="YouTube">▶</a>
+          <a href="#" aria-label="Instagram">📷</a>
+          <a href="#" aria-label="TikTok">🎵</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Site</h4>
+        <a href="sobre.html">Sobre</a>
+        <a href="faq.html">FAQ</a>
+        <a href="contato.html">Contato</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="privacidade.html">Privacidade</a>
+        <a href="termos.html">Termos</a>
+        <a href="cookies.html">Cookies</a>
+      </div>
+      <div class="footer-col">
+        <h4>Suporte</h4>
+        <a href="dmca.html">DMCA</a>
+        <a href="creditos.html">Créditos</a>
+        <a href="admin.html">Admin</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MCBE. Todos os direitos reservados.</span>
+    </div>
+    <p class="disclaimer">MCBE não possui vínculo com Mojang Studios ou Microsoft. Minecraft é uma marca registrada de Mojang Studios.</p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/data.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>
